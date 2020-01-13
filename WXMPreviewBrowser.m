@@ -167,7 +167,7 @@
     return tempView;
 }
 
-/** 显示的view */
+/** supview */
 - (UIView *)displaySupView {
     if (self.displayControlle) return self.displayControlle.view;
     return KWindow.rootViewController.view;
@@ -179,7 +179,6 @@
 }
 
 - (WXMPreviewBrowserCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)index {
-    
     WXMPreviewBrowserCell *cell = nil;
     UICollectionView *cv = collectionView;
     cell = [cv dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:index];
@@ -301,8 +300,8 @@
    };
 }
 
-/** * 下拉 */
-- (void (^) (NSInteger,BOOL,CGRect))dropDownEnd {
+/** * 下拉结束 */
+- (void (^) (NSInteger, BOOL, CGRect))dropDownEnd {
     return ^(NSInteger index, BOOL cancle, CGRect rect) {
         self.currentIndex = index;
         if (cancle) {

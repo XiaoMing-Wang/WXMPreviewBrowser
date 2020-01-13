@@ -58,13 +58,13 @@
     self.scrollView.alwaysBounceHorizontal = NO;
     self.scrollView.alwaysBounceVertical = NO;
     self.scrollView.layer.masksToBounds = NO;
-    
+
     self.imageView = [[WXMPrePhotoImageView alloc] initWithFrame:CGRectMake(0, 0, w, 0)];
     self.imageView.contentMode = UIViewContentModeScaleAspectFit;
     self.imageView.layer.masksToBounds = YES;
     self.imageView.backgroundColor = [UIColor clearColor];
     self.imageView.userInteractionEnabled = NO;
-       
+
     self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:(UIActivityIndicatorViewStyleGray)];
     self.activity.frame = CGRectMake(0, 0, 50, 50);
     self.activity.center = CGPointMake(w / 2, h / 2);
@@ -247,7 +247,7 @@
     }];
 }
 
-/** 每次播放重新创建 更换item有BUG */
+/** 每次播放重新创建 更换item卡顿 */
 - (void)playVideos {
     if (!self.previewModel.filePath) return;
     if ([self.previewModel.filePath isEqualToString:self.playingUrl]) return;
@@ -369,7 +369,7 @@
             self.scrollView.userInteractionEnabled = NO;
             UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
             CGRect rect = [self.imageView convertRect:self.imageView.bounds toView:window];
-            if (self.dropDownEnd) self.dropDownEnd(self.previewModel.index,NO,rect);
+            if (self.dropDownEnd) self.dropDownEnd(self.previewModel.index, NO, rect);
         }
     }
 }

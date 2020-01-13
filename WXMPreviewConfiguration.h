@@ -41,13 +41,13 @@ typedef NS_ENUM(NSUInteger, WXMPreviewType) {
 
 /** 获取方式 */
 typedef NS_ENUM(NSUInteger, WXMPreviewAccessType) {
-    
+
     /** 1通过父视图获取(本地) */
     WXMPreviewAccessTypeSupView = 0,
-    
+
     /** 2通过数组获取(本地+网络) */
     WXMPreviewAccessTypeList,
-    
+
     /** 3网络 */
     WXMPreviewAccessTypeDynamic,
 };
@@ -62,12 +62,9 @@ typedef NS_ENUM(NSUInteger, WXMPreviewAccessType) {
 /** 获取当前imageview */
 - (UIImageView *)currentDisplayWithIndex:(NSInteger)index;
 
-/** 返回当前大图链接 */
+/** 返回当前大图链接 返回nil不会更新 */
 - (NSString *)currentOriginalUrlWithIndex:(NSInteger)index;
 
-
-//- (UIImage *)photoBrowser:(WXMPreviewBrowser *)browser imageForIndex:(NSInteger)index;
-//- (NSString *)photoBrowser:(WXMPreviewBrowser *)browser highQualityIndex:(NSInteger)index;
 @end
 
 #endif /* WXMPreviewConfiguration_h */
