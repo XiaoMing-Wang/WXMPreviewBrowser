@@ -22,6 +22,9 @@
 
 - (instancetype)init {
     if (self = [super init]) {
+        self.currentIndex = 1;
+        self.haveNavigationBar = YES;
+                
         self.frame = CGRectMake(0, 0, kSWidth, kSHeight);
         self.backgroundColor = [UIColor clearColor];
         [self initializationInterface];
@@ -55,7 +58,7 @@
     /** 在window中位置 */
     CGRect disRect = [self currentlyDisplayRect:displayIV];
     NSInteger index = MAX(self.currentIndex - 1, 0);
-        
+                  
     /** 当前model */
     WXMPreviewModel *previewModel = [self.dataSource objectAtIndex:index];
     CGFloat disRatio = previewModel.aspectRatio;
@@ -72,6 +75,16 @@
         }
     }
     
+    UIView *maskView = nil;
+    if (self.haveNavigationBar && disRect.origin.y < kNBarHeight) {
+        CGFloat keepOut = kNBarHeight - disRect.origin.y;
+        CGFloat maskHeight = disRect.size.height - keepOut;
+        maskView = [[UIView alloc] init];
+        maskView.frame = CGRectMake(0, keepOut, disRect.size.width, maskHeight);
+        maskView.backgroundColor = [UIColor blackColor];
+        tempView.maskView = maskView;
+    }
+    
     CGFloat height = disRatio * kSWidth;
     CGFloat sx = kSWidth / (displayIV.frame.size.width * 1.0);
     CGFloat sy = height / (displayIV.frame.size.height * 1.0);
@@ -79,6 +92,8 @@
     [UIView animateWithDuration:0.25 delay:0 options:option animations:^{
         
         self.blackBoard.alpha = 1;
+        maskView.bounds = tempView.frame;
+        maskView.transform = CGAffineTransformMakeScale(sx, sy);
         tempView.transform = CGAffineTransformMakeScale(sx, sy);
         tempView.center = CGPointMake(kSWidth / 2, kSHeight / 2);
         
@@ -131,9 +146,25 @@
     if (displayImage) tempView.image = displayImage;
     tempView.contentMode = UIViewContentModeScaleAspectFill;
     [self addSubview:tempView];
+    
+    UIView *maskView = nil;
+    if (self.haveNavigationBar && disRect.origin.y < kNBarHeight) {
+        maskView = [[UIView alloc] init];
+        maskView.frame = tempView.bounds;
+        maskView.backgroundColor = [UIColor blackColor];
+        tempView.maskView = maskView;
+    }
+        
     UIViewAnimationOptions option = UIViewAnimationOptionCurveEaseInOut;
     [UIView animateWithDuration:0.25 delay:0 options:option animations:^{
-        tempView.frame = disRect;
+        if (displayIV == nil)  {
+            tempView.alpha = 0;
+        } else {
+            CGFloat ko = kNBarHeight - disRect.origin.y;
+            maskView.frame = CGRectMake(0, ko, disRect.size.width, disRect.size.height - ko);
+            tempView.frame = disRect;
+        }
+        
         self.blackBoard.alpha = 0;
     } completion:^(BOOL finished) {
         displayIV.alpha = 1;
@@ -193,15 +224,16 @@
 
 /** 创建model数组 */
 - (void)createPreviewModelDataSource {
-    for (int i = 1; i <= self.imageCount; i++) {
+    self.imageCount = MAX(self.imageCount, self.currentIndex);
+    for (int i = 0; i < self.imageCount; i++) {
         UIImageView *imageV = nil;
         WXMPreviewModel *previewModel = [[WXMPreviewModel alloc] init];
         
         /** 获取imageview */
         if ([self.delegate respondsToSelector:@selector(currentDisplayWithIndex:)]) {
-            imageV = [self.delegate currentDisplayWithIndex:i];
+            imageV = [self.delegate currentDisplayWithIndex:(i + 1)];
         } else {
-            imageV = [self.containerView viewWithTag:i];
+            imageV = [self.containerView viewWithTag:(i + 1)];
         }
         
         
@@ -209,23 +241,25 @@
         if (imageV.image != nil) {
             previewModel.aspectRatio = imageV.image.size.height / imageV.image.size.width * 1.0;
             if (isnan(previewModel.aspectRatio)) {
-                previewModel.aspectRatio = imageV.frame.size.height / imageV.frame.size.width * 1.0;
+                previewModel.aspectRatio = imageV.frame.size.height/imageV.frame.size.width*1.0;
             }
+        } else if (imageV != nil) {
+            previewModel.aspectRatio = imageV.frame.size.height/imageV.frame.size.width*1.0;
         } else {
-            previewModel.aspectRatio = imageV.frame.size.height / imageV.frame.size.width * 1.0;
+            previewModel.aspectRatio = kSHeight / kSWidth * 1.0;
         }
-        previewModel.index = i;
+                
+        previewModel.index = (i + 1);
         previewModel.thumbnailImage = imageV.image;
-        
-        
+                
         /** 获取原始url 没有默认当原始图 */
         NSString *originalUrl = nil;
-        if ([self.delegate respondsToSelector:@selector(currentOriginalUrlWithIndex:)]) {
-            originalUrl = [self.delegate currentOriginalUrlWithIndex:i];
+        if (self.imageArray && self.imageArray.count > i) {
+            originalUrl = [self.imageArray objectAtIndex:i];
         }
         previewModel.originalUrl = originalUrl;
         if (!originalUrl) previewModel.originalImage = imageV.image;
-                
+        
         
         /** gif */
         if ([originalUrl.pathExtension.lowercaseString isEqualToString:@"gif"] ||
@@ -245,6 +279,7 @@
         /** 视频 */
         if ([originalUrl.pathExtension.lowercaseString isEqualToString:@"mp4"] ||
             [originalUrl.pathExtension.lowercaseString isEqualToString:@"avi"] ||
+            [originalUrl.pathExtension.lowercaseString isEqualToString:@"rmgb"] ||
             [originalUrl.pathExtension.lowercaseString isEqualToString:@"mov"]) {
             previewModel.previewType = WXMPreviewTypeTypeVideo;
         }
@@ -313,6 +348,7 @@
 }
 
 - (void)setImageCount:(NSInteger)imageCount {
+    if (_imageArray.count > 0) imageCount = _imageArray.count;
     _imageCount = imageCount;
     _pageController.numberOfPages = imageCount;
     _pageController.hidden = (imageCount <= 1);
@@ -323,7 +359,7 @@
     _pageController.currentPage = (currentIndex - 1);
 }
 
-- (void)setImageArray:(NSArray<UIImage *> *)imageArray {
+- (void)setImageArray:(NSArray<NSString *> *)imageArray {
     _imageArray = imageArray;
     [self setImageCount:imageArray.count];
 }

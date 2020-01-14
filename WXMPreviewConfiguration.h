@@ -21,6 +21,18 @@
 #define kCenter CGPointMake(kSWidth / 2.0, kSHeight / 2.0)
 #define KWindow [[[UIApplication sharedApplication] delegate] window]
 
+/** 导航栏高度 安全高度 */
+#define kNBarHeight ((kIPhoneX) ? 88.0f : 64.0f)
+
+/** iphoneX */
+#define kIPhoneX \
+({BOOL isPhoneX = NO;\
+if (@available(iOS 11.0, *)) {\
+isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
+}\
+(isPhoneX);\
+})
+
 /** 颜色(RGB) */
 #define kRGBColor(r, g, b) \
 [UIColor colorWithRed:(r) / 255.0f green:(g) / 255.0f blue:(b) / 255.0f alpha:1]
@@ -39,18 +51,18 @@ typedef NS_ENUM(NSUInteger, WXMPreviewType) {
 
 };
 
-/** 获取方式 */
-typedef NS_ENUM(NSUInteger, WXMPreviewAccessType) {
-    
-    /** 1通过父视图获取(本地) */
-    WXMPreviewAccessTypeSupView = 0,
-    
-    /** 2通过数组获取(本地+网络) */
-    WXMPreviewAccessTypeList,
-    
-    /** 3网络 */
-    WXMPreviewAccessTypeDynamic,
-};
+///** 获取方式 */
+//typedef NS_ENUM(NSUInteger, WXMPreviewAccessType) {
+//    
+//    /** 1通过父视图获取(本地) */
+//    WXMPreviewAccessTypeSupView = 0,
+//    
+//    /** 2通过数组获取(本地+网络) */
+//    WXMPreviewAccessTypeList,
+//    
+//    /** 3网络 */
+//    WXMPreviewAccessTypeDynamic,
+//};
 
 /** 1直接预览原图 */
 /** 2先缩略图 后原图 */
@@ -62,12 +74,6 @@ typedef NS_ENUM(NSUInteger, WXMPreviewAccessType) {
 /** 获取当前imageview */
 - (UIImageView *)currentDisplayWithIndex:(NSInteger)index;
 
-/** 返回当前大图链接 */
-- (NSString *)currentOriginalUrlWithIndex:(NSInteger)index;
-
-
-//- (UIImage *)photoBrowser:(WXMPreviewBrowser *)browser imageForIndex:(NSInteger)index;
-//- (NSString *)photoBrowser:(WXMPreviewBrowser *)browser highQualityIndex:(NSInteger)index;
 @end
 
 #endif /* WXMPreviewConfiguration_h */

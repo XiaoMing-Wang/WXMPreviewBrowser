@@ -20,7 +20,6 @@
 
 @interface WXMPreviewBrowserCell () <UIScrollViewDelegate>
 @property (nonatomic, strong) UIScrollView *scrollView;
-@property (nonatomic, strong) UIActivityIndicatorView *activity;
 @property (nonatomic, strong) WXMPrePhotoImageView *imageView;
 @property (nonatomic, strong) WXMPreviewDirectionPan *recognizer;
 @property (nonatomic, strong) WXMDownloadProgressBar *progressBar;
@@ -38,7 +37,11 @@
 @property (nonatomic, assign) CGFloat wxm_y;
 @property (nonatomic, assign) CGFloat wxm_zoomScale;
 @property (nonatomic, assign) CGPoint wxm_lastPoint;
+
+@property (nonatomic, assign) BOOL requestError;
+
 @end
+
 @implementation WXMPreviewBrowserCell
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -64,12 +67,6 @@
     self.imageView.layer.masksToBounds = YES;
     self.imageView.backgroundColor = [UIColor clearColor];
     self.imageView.userInteractionEnabled = NO;
-       
-    self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:(UIActivityIndicatorViewStyleGray)];
-    self.activity.frame = CGRectMake(0, 0, 50, 50);
-    self.activity.center = CGPointMake(w / 2, h / 2);
-    self.activity.hidesWhenStopped = NO;
-    self.activity.hidden = YES;
     
     self.progressBar = [[WXMDownloadProgressBar alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
     self.progressBar.center = CGPointMake(w / 2, h / 2);
@@ -77,7 +74,6 @@
     
     [self.contentView addSubview:self.scrollView];
     [self.scrollView addSubview:self.imageView];
-    [self.scrollView addSubview:self.activity];
     [self.scrollView addSubview:self.progressBar];
     [self.scrollView setMinimumZoomScale:1.0];
     [self.scrollView setMaximumZoomScale:2.5f];
@@ -127,6 +123,10 @@
         CGFloat maxZoomScale = kSHeight / self.imageView.frame.size.height;
         self.scrollView.maximumZoomScale = maxZoomScale;
     }
+    
+    if (proportion == (kSHeight / kSWidth * 1.0)) {
+        self.imageView.backgroundColor = [UIColor blackColor];
+    }
 }
 
 /** 加载原生图片 */
@@ -161,6 +161,11 @@
             self.previewModel.originalImage = image;
             self.previewModel.displayOriginal = YES;
             self.imageView.backgroundColor = [UIColor clearColor];
+            CGFloat aspectRatio = image.size.height / image.size.width;
+            if (!isnan(aspectRatio)) {
+                self.previewModel.aspectRatio = aspectRatio;
+                [self setLocationWithAspectRatio:aspectRatio];
+            }
             return YES;
         }
      
@@ -171,16 +176,23 @@
         if (data) {
             self.imageView.backgroundColor = [UIColor clearColor];
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                UIImage *image = [WXMPrePhotoGIFImage imageWithData:data];
+                WXMPrePhotoGIFImage *image =
+                (WXMPrePhotoGIFImage *)[WXMPrePhotoGIFImage imageWithData:data];
+                
+                UIImage *first = [image getFrameWithIndex:0];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     self.imageView.image = image;
                     self.previewModel.originalImage = image;
                     self.previewModel.displayOriginal = YES;
+                    if (first) {
+                        CGFloat aspec = first.size.height / first.size.width;
+                        if (!isnan(aspec)) self.previewModel.aspectRatio = aspec;
+                        if (!isnan(aspec)) [self setLocationWithAspectRatio:aspec];
+                    }
                 });
             });
             return YES;
         }
-        
     }
     
     return NO;
@@ -189,31 +201,38 @@
 /** 下载图片  */
 - (void)downloadImage {
     if (!self.previewModel.originalUrl) return;
-    
-    self.activity.hidden = NO;
-    [self.activity startAnimating];
-    
+
     NSLog(@"下载图片");
+    __weak __typeof(self) self_weak = self;
     NSURL *url = [NSURL URLWithString:self.previewModel.originalUrl];
     SDWebImageDownloader *manager = [SDWebImageDownloader sharedDownloader];
-    [manager downloadImageWithURL:url options:0 progress:nil completed:^(UIImage *image,
-                                                                         NSData *data,
-                                                                         NSError *error,
-                                                                         BOOL finished) {
+    [manager downloadImageWithURL:url options:0 progress:^(NSInteger size, NSInteger exSize, NSURL *targetURL) {
         
-        self.activity.hidden = YES;
+        if (size > 0 && exSize > 0) {
+            CGFloat progree = size / (exSize * 1.0);
+            self_weak.progressBar.progress = progree;
+        }
+              
+    }  completed:^(UIImage *image, NSData *data, NSError *error, BOOL finished) {
+        
         if (image && !error) {
             NSLog(@"下载完成");
-            self.imageView.image = image;
-            self.previewModel.originalImage = image;
-            self.imageView.backgroundColor = [UIColor clearColor];
-            if (data && self.previewModel.previewType == WXMPreviewTypeTypeGIF) {
-                self.previewModel.originalImage = [WXMPrePhotoGIFImage imageWithData:data];
-                self.imageView.image = self.previewModel.originalImage;
+            self_weak.imageView.image = image;
+            self_weak.previewModel.originalImage = image;
+            self_weak.imageView.backgroundColor = [UIColor clearColor];
+            if (data && self_weak.previewModel.previewType == WXMPreviewTypeTypeGIF) {
+                self_weak.previewModel.originalImage = [WXMPrePhotoGIFImage imageWithData:data];
+                self_weak.imageView.image = self_weak.previewModel.originalImage;
+                CGFloat aspec = image.size.height / image.size.width;
+                if (!isnan(aspec)) {
+                    self_weak.previewModel.aspectRatio = aspec;
+                    [self_weak setLocationWithAspectRatio:aspec];
+                }
             }
             SDImageCache* cache = [SDImageCache sharedImageCache];
             [cache storeImageDataToDisk:data forKey:url.absoluteString];
         }
+                
     }];
     
 }
@@ -231,17 +250,28 @@
         self_weak.progressBar.progress = downloadProgress;
         self_weak.playerLayer.hidden = YES;
         
-    } complement:^(NSString * _Nonnull filePath, NSError * _Nonnull error) {
+    } complement:^(NSString *filePath, NSError *error) {
+        
+        /** 重新下载一遍 */
+        if (error && !self_weak.requestError) {
+            [self_weak downloadVideo];
+            self_weak.requestError = YES;
+            return;
+        }
         
         self_weak.imageView.image = nil;
         self_weak.previewModel.filePath = filePath.copy;
-        NSURL *url = [NSURL URLWithString:filePath];
+        NSURL *url = [NSURL fileURLWithPath:filePath];
         UIImage *image = [self_weak thumbnailImageForVideo:url];
         if (image) {
-            CGFloat aspectRatio = image.size.height / image.size.width * 1.0;
-            if (!isnan(aspectRatio)) {
-                [self_weak setLocationWithAspectRatio:aspectRatio];
+            if (!self_weak.previewModel.thumbnailImage) {
+                self_weak.previewModel.thumbnailImage = image;
+                self_weak.imageView.image = image;
             }
+            
+            CGFloat aspec = image.size.height / image.size.width * 1.0;
+            if (!isnan(aspec)) self_weak.previewModel.aspectRatio = aspec;
+            if (!isnan(aspec)) [self_weak setLocationWithAspectRatio:aspec];
         }
         [self_weak playVideos];
     }];
