@@ -2,8 +2,8 @@
 ////  WXMPreviewControlView.m
 ////  TianMiMi
 ////
-////  Created by sdjim on 2019/12/4.
-////  Copyright © 2019 sdjgroup. All rights reserved.
+////  Created by wxm on 2019/12/4.
+////  Copyright © 2019 wxm. All rights reserved.
 ////
 
 #import "WXMPreviewBrowser.h"

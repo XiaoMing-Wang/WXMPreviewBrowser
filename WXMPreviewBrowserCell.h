@@ -3,7 +3,7 @@
 //  TianMiMi
 //
 //  Created by wq on 2019/12/7.
-//  Copyright © 2019 sdjgroup. All rights reserved.
+//  Copyright © 2019 wxm. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
