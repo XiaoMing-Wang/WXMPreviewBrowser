@@ -51,19 +51,6 @@ typedef NS_ENUM(NSUInteger, WXMPreviewType) {
 
 };
 
-///** 获取方式 */
-//typedef NS_ENUM(NSUInteger, WXMPreviewAccessType) {
-//    
-//    /** 1通过父视图获取(本地) */
-//    WXMPreviewAccessTypeSupView = 0,
-//    
-//    /** 2通过数组获取(本地+网络) */
-//    WXMPreviewAccessTypeList,
-//    
-//    /** 3网络 */
-//    WXMPreviewAccessTypeDynamic,
-//};
-
 /** 1直接预览原图 */
 /** 2先缩略图 后原图 */
 /** 3无缩略图 直接原图 */

@@ -87,24 +87,25 @@
         
         self.imageView.image = previewModel.originalImage;
         self.imageView.backgroundColor = [UIColor clearColor];
+        
     } else if (previewModel.thumbnailImage && isGraphic) {
         
         [self judgeCacleExsit];
         self.imageView.image = previewModel.thumbnailImage;
         self.imageView.backgroundColor = [UIColor clearColor];
+        
     } else if (isGraphic) {
         
         self.imageView.image = nil;
         self.imageView.backgroundColor = WXMPlaceholderColor;
         [self judgeCacleExsit];
+        
     } else if (isGraphic == NO) {
         
         self.imageView.image = previewModel.thumbnailImage;
-        if (!previewModel.thumbnailImage) {
-            self.imageView.backgroundColor = WXMPlaceholderColor;
-        }
+        if (!previewModel.thumbnailImage)  self.imageView.backgroundColor = WXMPlaceholderColor;
     }
-          
+    
     [self setLocationWithAspectRatio:previewModel.aspectRatio];
     if (self.previewModel.thumbnailImage || self.previewModel.originalImage) {
         self.imageView.backgroundColor = [UIColor clearColor];
