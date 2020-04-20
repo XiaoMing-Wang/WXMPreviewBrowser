@@ -460,5 +460,4 @@
     return videoImage;
 }
 
-
 @end
