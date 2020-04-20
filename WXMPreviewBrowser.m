@@ -238,13 +238,18 @@
         
         /** 图片框的比例 有图片用图片 没有用框的比例 */
         if (imageV.image != nil) {
+            
             previewModel.aspectRatio = imageV.image.size.height / imageV.image.size.width * 1.0;
             if (isnan(previewModel.aspectRatio)) {
-                previewModel.aspectRatio = imageV.frame.size.height/imageV.frame.size.width*1.0;
+                previewModel.aspectRatio = imageV.frame.size.height / imageV.frame.size.width * 1.0;
             }
+            
         } else if (imageV != nil) {
-            previewModel.aspectRatio = imageV.frame.size.height/imageV.frame.size.width*1.0;
+            
+            previewModel.aspectRatio = imageV.frame.size.height / imageV.frame.size.width * 1.0;
+            
         } else {
+            
             previewModel.aspectRatio = kSHeight / kSWidth * 1.0;
         }
                 

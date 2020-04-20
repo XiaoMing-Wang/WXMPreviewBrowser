@@ -447,21 +447,17 @@
 /// @param videoURL url
 - (UIImage *)thumbnailImageForVideo:(NSURL *)videoURL {
     AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:videoURL options:nil];
-    AVAssetImageGenerator *generator = [[AVAssetImageGenerator alloc] initWithAsset:asset];
-    generator.appliesPreferredTrackTransform = YES;
-    generator.apertureMode = AVAssetImageGeneratorApertureModeEncodedPixels;
-
-    CGImageRef imageRef = NULL;
-    NSTimeInterval time = 0.1;
-    CFTimeInterval imageTime = time;
-    CMTime cmTime = CMTimeMake(imageTime, 60);
-
+    AVAssetImageGenerator *assetGen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+    
+    assetGen.appliesPreferredTrackTransform = YES;
+    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
     NSError *error = nil;
-    imageRef = [generator copyCGImageAtTime:cmTime actualTime:NULL error:&error];
-
-    UIImage *thumbnailImage = imageRef ? [[UIImage alloc] initWithCGImage:imageRef] : nil;
-    CGImageRelease(imageRef);
-    return thumbnailImage;
+    CMTime actualTime;
+    CGImageRef image = [assetGen copyCGImageAtTime:time actualTime:&actualTime error:&error];
+    UIImage *videoImage = [[UIImage alloc] initWithCGImage:image];
+    CGImageRelease(image);
+    return videoImage;
 }
+
 
 @end
