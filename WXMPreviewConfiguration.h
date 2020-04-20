@@ -51,6 +51,9 @@ typedef NS_ENUM(NSUInteger, WXMPreviewType) {
 
 };
 
+/** 1直接预览原图 */
+/** 2先缩略图 后原图 */
+/** 3无缩略图 直接原图 */
 @class WXMPreviewBrowser;
 @protocol WXMPreviewDelegate <NSObject>
 @optional

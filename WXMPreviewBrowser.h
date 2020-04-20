@@ -2,8 +2,8 @@
 //  WXMPreviewControlView.h
 //  TianMiMi
 //
-//  Created by sdjim on 2019/12/4.
-//  Copyright © 2019 sdjgroup. All rights reserved.
+//  Created by wxm on 2019/12/4.
+//  Copyright © 2019 wxm. All rights reserved.
 //
 /** 图片预览控件 */
 #import <UIKit/UIKit.h>
